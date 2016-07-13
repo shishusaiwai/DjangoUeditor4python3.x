@@ -4,7 +4,8 @@ from . import settings as USettings
 import os
 import json
 from django.views.decorators.csrf import csrf_exempt
-import datetime, random
+import datetime
+import random
 from urllib.parse import urljoin
 
 
@@ -105,7 +106,6 @@ def get_files(root_path, cur_path, allow_types=[]):
     files = []
     items = os.listdir(cur_path)
     for item in items:
-        item = unicode(item)
         item_fullname = os.path.join(root_path, cur_path, item).replace("\\", "/")
         if os.path.isdir(item_fullname):
             files.extend(get_files(root_path, item_fullname, allow_types))
@@ -145,7 +145,8 @@ def UploadFile(request):
     else:
         # 取得上传的文件
         file = request.FILES.get(UploadFieldName, None)
-        if file is None: return HttpResponse(json.dumps(u"{'state:'ERROR'}"), content_type="application/javascript")
+        if file is None:
+            return HttpResponse(json.dumps(u"{'state:'ERROR'}"), content_type="application/javascript")
         upload_file_name = file.name
         upload_file_size = file.size
 
@@ -162,7 +163,7 @@ def UploadFile(request):
     if action in upload_allow_type:
         allow_type = list(request.GET.get(upload_allow_type[action],
                                           USettings.UEditorUploadSettings.get(upload_allow_type[action], "")))
-        if not upload_original_ext in allow_type:
+        if upload_original_ext not in allow_type:
             state = u"服务器不允许上传%s类型的文件。" % upload_original_ext
 
     # 大小检验
@@ -227,7 +228,6 @@ def catcher_remote_image(request):
 
     allow_type = list(
             request.GET.get("catcherAllowFiles", USettings.UEditorUploadSettings.get("catcherAllowFiles", "")))
-    max_size = int(request.GET.get("catcherMaxSize", USettings.UEditorUploadSettings.get("catcherMaxSize", 0)))
 
     remote_urls = request.POST.getlist("source[]", [])
     catcher_infos = []
@@ -249,7 +249,8 @@ def catcher_remote_image(request):
             o_filename = os.path.join(o_path, o_file).replace("\\", "/")
             # 读取远程图片文件
             try:
-                remote_image = urllib.urlopen(remote_url)
+                import urllib.request
+                remote_image = urllib.request.urlopen(remote_url)
                 # 将抓取到的文件写入文件
                 try:
                     f = open(o_filename, 'wb')
